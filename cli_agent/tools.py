@@ -114,6 +114,59 @@ class Tools:
         summary += ")"
         return table + summary
 
+    @staticmethod
+    def schemas() -> list[dict]:
+        """Anthropic tool schemas."""
+        return [
+            {
+                "name": "list_tables",
+                "description": "List all tables across schemas (raw, staging, marts). Call this first when exploring.",
+                "input_schema": {"type": "object", "properties": {}, "required": []},
+            },
+            {
+                "name": "describe_table",
+                "description": "Get columns, types, and dbt documentation for a table. Prefer schema-qualified names like 'marts.fct_orders'.",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {"name": {"type": "string"}},
+                    "required": ["name"],
+                },
+            },
+            {
+                "name": "sample_rows",
+                "description": "Return up to 20 rows from a table to inspect actual values (e.g., enum-like columns).",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "table": {"type": "string"},
+                        "n": {"type": "integer", "default": 5},
+                    },
+                    "required": ["table"],
+                },
+            },
+            {
+                "name": "run_sql",
+                "description": "Execute a read-only SELECT query. Writes are blocked at the DB level. Results capped at MAX_ROWS.",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {"query": {"type": "string"}},
+                    "required": ["query"],
+                },
+            },
+        ]
+
+    def dispatch(self, name: str, args: dict) -> str:
+        """Route a tool_use block to the right method. Returns the tool_result string."""
+        if name == "list_tables":
+            return self.list_tables()
+        if name == "describe_table":
+            return self.describe_table(args["name"])
+        if name == "sample_rows":
+            return self.sample_rows(args["table"], args.get("n", 5))
+        if name == "run_sql":
+            return self.run_sql(args["query"])
+        return f"Unknown tool: {name}"
+
 
 def _markdown_table(cols: list[str], rows: list[tuple]) -> str:
     if not rows:
