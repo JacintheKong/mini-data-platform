@@ -34,3 +34,38 @@ class Tools:
         lines = ["| schema | table |", "|---|---|"]
         lines.extend(f"| {s} | {t} |" for s, t in rows)
         return "\n".join(lines)
+
+    def describe_table(self, name: str) -> str:
+        """Columns + types; merges dbt model description/column docs if available."""
+        if "." in name:
+            schema, table = name.split(".", 1)
+        else:
+            schema, table = "main", name
+        cols = self.conn.execute(
+            "SELECT column_name, data_type "
+            "FROM information_schema.columns "
+            "WHERE table_schema = ? AND table_name = ? "
+            "ORDER BY ordinal_position",
+            [schema, table],
+        ).fetchall()
+        if not cols:
+            return f"Table {name} not found."
+
+        lines = [f"# {name}"]
+        dbt_node = self._find_dbt_node(table)
+        if dbt_node and dbt_node.get("description"):
+            lines.append(f"\n{dbt_node['description']}\n")
+
+        lines.append("| column | type | description |")
+        lines.append("|---|---|---|")
+        col_docs = (dbt_node or {}).get("columns", {}) if dbt_node else {}
+        for col, dtype in cols:
+            desc = col_docs.get(col, {}).get("description", "")
+            lines.append(f"| {col} | {dtype} | {desc} |")
+        return "\n".join(lines)
+
+    def _find_dbt_node(self, table: str) -> dict | None:
+        for node in self._manifest.get("nodes", {}).values():
+            if node.get("name") == table:
+                return node
+        return None
