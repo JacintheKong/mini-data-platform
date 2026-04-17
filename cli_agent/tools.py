@@ -69,3 +69,37 @@ class Tools:
             if node.get("name") == table:
                 return node
         return None
+
+    def sample_rows(self, table: str, n: int = 5) -> str:
+        n = max(1, min(n, 20))  # hard cap
+        # Validate table exists to avoid cryptic SQL error
+        if "." in table:
+            schema, tbl = table.split(".", 1)
+        else:
+            schema, tbl = "main", table
+        exists = self.conn.execute(
+            "SELECT 1 FROM information_schema.tables "
+            "WHERE table_schema = ? AND table_name = ?",
+            [schema, tbl],
+        ).fetchone()
+        if not exists:
+            return f"Table {table} not found."
+        result = self.conn.execute(f"SELECT * FROM {table} LIMIT {n}")
+        rows = result.fetchall()
+        cols = [d[0] for d in result.description]
+        return _markdown_table(cols, rows)
+
+
+def _markdown_table(cols: list[str], rows: list[tuple]) -> str:
+    if not rows:
+        return f"(no rows)\nColumns: {', '.join(cols)}"
+    header = "| " + " | ".join(cols) + " |"
+    sep = "|" + "|".join("---" for _ in cols) + "|"
+    body = ["| " + " | ".join(_fmt(v) for v in row) + " |" for row in rows]
+    return "\n".join([header, sep, *body])
+
+
+def _fmt(v: Any) -> str:
+    if v is None:
+        return "NULL"
+    return str(v)
