@@ -1,6 +1,8 @@
 """Unit tests for cli_agent.tools — TDD."""
 import pytest
 
+import duckdb
+
 from cli_agent.tools import Tools
 
 
@@ -53,3 +55,29 @@ def test_sample_rows_caps_n_at_20(duckdb_conn):
     # Count data rows (lines after the markdown separator)
     data_lines = [l for l in out.splitlines() if l.startswith("|") and "---" not in l]
     assert len(data_lines) - 1 <= 20  # -1 for header
+
+
+def test_run_sql_executes_select(duckdb_conn):
+    tools = Tools(duckdb_conn)
+    out = tools.run_sql("SELECT COUNT(*) AS n FROM marts.fct_orders")
+    assert "5" in out  # 5 rows in fixture
+    assert "n" in out  # column name in header
+
+
+def test_run_sql_rejects_writes_via_readonly(tmp_path):
+    # Build a persistent DB so we can reopen read-only
+    db_path = tmp_path / "ro.duckdb"
+    setup = duckdb.connect(str(db_path))
+    setup.execute("CREATE TABLE t (x INTEGER)")
+    setup.execute("INSERT INTO t VALUES (1)")
+    setup.close()
+
+    conn_ro = duckdb.connect(str(db_path), read_only=True)
+    tools = Tools(conn_ro)
+    out = tools.run_sql("DROP TABLE t")
+    assert "error" in out.lower() or "read-only" in out.lower() or "cannot" in out.lower()
+    conn_ro.close()
+    # Verify table is still there via a fresh read-write connection
+    check = duckdb.connect(str(db_path))
+    assert check.execute("SELECT COUNT(*) FROM t").fetchone()[0] == 1
+    check.close()

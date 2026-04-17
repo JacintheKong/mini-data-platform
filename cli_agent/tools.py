@@ -1,9 +1,12 @@
 """Read-only tools exposed to the Claude agent."""
 import json
+import threading
 from pathlib import Path
 from typing import Any
 
 import duckdb
+
+from cli_agent import config
 
 SYSTEM_SCHEMAS = {"information_schema", "pg_catalog", "main"}
 
@@ -88,6 +91,28 @@ class Tools:
         rows = result.fetchall()
         cols = [d[0] for d in result.description]
         return _markdown_table(cols, rows)
+
+    def run_sql(self, query: str) -> str:
+        max_rows = config.MAX_ROWS
+        timeout = config.QUERY_TIMEOUT_SECONDS
+        timer = threading.Timer(timeout, self.conn.interrupt)
+        timer.start()
+        try:
+            result = self.conn.execute(query)
+            rows = result.fetchmany(max_rows + 1)
+            cols = [d[0] for d in result.description] if result.description else []
+        except Exception as e:
+            return f"SQL error: {e}"
+        finally:
+            timer.cancel()
+        truncated = len(rows) > max_rows
+        rows = rows[:max_rows]
+        table = _markdown_table(cols, rows)
+        summary = f"\n\n({len(rows)} row{'s' if len(rows) != 1 else ''}"
+        if truncated:
+            summary += f", truncated at MAX_ROWS={max_rows}"
+        summary += ")"
+        return table + summary
 
 
 def _markdown_table(cols: list[str], rows: list[tuple]) -> str:
