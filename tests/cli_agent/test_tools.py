@@ -81,3 +81,24 @@ def test_run_sql_rejects_writes_via_readonly(tmp_path):
     check = duckdb.connect(str(db_path))
     assert check.execute("SELECT COUNT(*) FROM t").fetchone()[0] == 1
     check.close()
+
+
+def test_run_sql_truncates_at_max_rows(duckdb_conn, monkeypatch):
+    from cli_agent import config
+    monkeypatch.setattr(config, "MAX_ROWS", 2)
+    tools = Tools(duckdb_conn)
+    out = tools.run_sql("SELECT * FROM marts.fct_orders")  # 5 rows
+    assert "truncated" in out.lower()
+    assert "MAX_ROWS=2" in out
+
+
+def test_run_sql_times_out(duckdb_conn, monkeypatch):
+    from cli_agent import config
+    monkeypatch.setattr(config, "QUERY_TIMEOUT_SECONDS", 1)
+    tools = Tools(duckdb_conn)
+    # A query that spins long enough to be interrupted
+    out = tools.run_sql(
+        "SELECT COUNT(*) FROM generate_series(1, 100000000) t(x) "
+        "CROSS JOIN generate_series(1, 100) u(y)"
+    )
+    assert "error" in out.lower() or "interrupt" in out.lower()
