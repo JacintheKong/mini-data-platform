@@ -112,7 +112,7 @@ Ten TDD tests on `tools.py` (list/describe/sample/run_sql, read-only enforcement
 - **Multi-agent for scheduled investigations.** A watcher finds anomalies nightly and dispatches a diagnostic sub-agent per anomaly. Productizes the anomaly category as a workflow.
 - **Result caching across REPL session.** Cache `list_tables` / `describe_table` outputs within a session — saves turns on follow-ups like "now break that down by segment."
 - **Chart generation.** Add a `make_chart` tool (matplotlib → PNG → terminal image via iTerm2 / Kitty protocols) for trend questions.
-- **Vector-search over dbt docs.** Scales schema discovery to warehouses with thousands of tables. Overkill for 13 tables here; justified at 1,000+.
+- **Vector-search over dbt docs.** Scales schema discovery to warehouses with thousands of tables. Overkill at this scale (~20 tables); justified at 1,000+.
 - **Streaming output.** Use the SDK's streaming API so long answers feel responsive.
 - **Richer REPL.** Arrow-key history, tab-completion on table names, session transcript save (`:save session.md`).
 
