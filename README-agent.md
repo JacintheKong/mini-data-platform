@@ -2,6 +2,8 @@
 
 A terminal agent that answers ad-hoc questions about the mini-data-platform warehouse. Ask it anything — sales, product pairs, anomalies, customer metrics — and it explores the schema, writes SQL, and explains the result.
 
+*Illustrative output (numbers depend on the data seed):*
+
 ```
 $ uv run python -m cli_agent "Total revenue in Q4 2024?"
 Q4 2024 completed-order revenue was $512,340 across 1,842 orders.

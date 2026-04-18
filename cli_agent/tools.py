@@ -1,5 +1,6 @@
 """Read-only tools exposed to the Claude agent."""
 import json
+import re
 import threading
 from pathlib import Path
 from typing import Any
@@ -8,7 +9,7 @@ import duckdb
 
 from cli_agent import config
 
-SYSTEM_SCHEMAS = {"information_schema", "pg_catalog", "main"}
+_IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$")
 
 
 class Tools:
@@ -61,7 +62,7 @@ class Tools:
 
         lines.append("| column | type | description |")
         lines.append("|---|---|---|")
-        col_docs = (dbt_node or {}).get("columns", {}) if dbt_node else {}
+        col_docs = (dbt_node or {}).get("columns", {})
         for col, dtype in cols:
             desc = col_docs.get(col, {}).get("description", "")
             lines.append(f"| {col} | {dtype} | {desc} |")
@@ -75,7 +76,10 @@ class Tools:
 
     def sample_rows(self, table: str, n: int = 5) -> str:
         n = max(1, min(n, 20))  # hard cap
-        # Validate table exists to avoid cryptic SQL error
+        # Reject anything that isn't a plain (schema.)table identifier — the name
+        # gets interpolated into SQL below, and read-only mode is the only other guard.
+        if not _IDENT_RE.match(table):
+            return f"Invalid table name: {table!r}"
         if "." in table:
             schema, tbl = table.split(".", 1)
         else:

@@ -62,7 +62,7 @@ def bootstrap(conn: duckdb.DuckDBPyConnection) -> str:
         counts = {}
 
     today = date.today().isoformat()
-    parts = [f"## Live warehouse facts (fetched at session start)", f"- Today's wall-clock date: {today}"]
+    parts = ["## Live warehouse facts (fetched at session start)", f"- Today's wall-clock date: {today}"]
     if min_d and max_d:
         parts.append(
             f"- Data spans {min_d} to {max_d}. "

@@ -39,6 +39,7 @@ class AgentSession:
                 max_tokens=4096,
                 system=self.system_prompt,
                 tools=Tools.schemas(),
+                # Deep-copy so the SDK can't normalize blocks in-place and corrupt history.
                 messages=copy.deepcopy(messages),
             )
             trace.append(resp)
@@ -61,7 +62,7 @@ class AgentSession:
             messages.append({"role": "assistant", "content": _serialize_content(resp.content)})
             messages.append({"role": "user", "content": tool_results})
         return AgentResult(
-            text="(agent did not converge in max_iterations turns)",
+            text=f"(agent did not converge in {self.max_iterations} turns)",
             trace=trace,
             messages=messages,
         )
