@@ -37,6 +37,7 @@ class Tools:
             return "(no tables found)"
         lines = ["| schema | table |", "|---|---|"]
         lines.extend(f"| {s} | {t} |" for s, t in rows)
+        lines.append(f"\n({len(rows)} tables)")
         return "\n".join(lines)
 
     def describe_table(self, name: str) -> str:
@@ -66,6 +67,7 @@ class Tools:
         for col, dtype in cols:
             desc = col_docs.get(col, {}).get("description", "")
             lines.append(f"| {col} | {dtype} | {desc} |")
+        lines.append(f"\n({len(cols)} columns)")
         return "\n".join(lines)
 
     def _find_dbt_node(self, table: str) -> dict | None:
