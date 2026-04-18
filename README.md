@@ -35,12 +35,13 @@ Result:
 
 ## Quick start
 
+**Prerequisite:** [install `uv`](https://docs.astral.sh/uv/getting-started/installation/). The setup script below uses `uv run`, which provisions the project venv on first call.
+
 ```bash
 # 1. Build the warehouse (one-time, ~30 seconds)
 ./setup.sh
 
-# 2. Install Python deps and export your API key
-uv sync
+# 2. Export your Anthropic API key
 export ANTHROPIC_API_KEY=sk-ant-...
 
 # 3. Ask a question
@@ -111,7 +112,7 @@ Ten TDD tests on `tools.py` (list/describe/sample/run_sql, read-only enforcement
 - **Multi-agent for scheduled investigations.** A watcher finds anomalies nightly and dispatches a diagnostic sub-agent per anomaly. Productizes the anomaly category as a workflow.
 - **Result caching across REPL session.** Cache `list_tables` / `describe_table` outputs within a session — saves turns on follow-ups like "now break that down by segment."
 - **Chart generation.** Add a `make_chart` tool (matplotlib → PNG → terminal image via iTerm2 / Kitty protocols) for trend questions.
-- **Vector-search over dbt docs.** Scales schema discovery to warehouses with thousands of tables. Overkill for 21 tables here; justified at 1,000+.
+- **Vector-search over dbt docs.** Scales schema discovery to warehouses with thousands of tables. Overkill for 13 tables here; justified at 1,000+.
 - **Streaming output.** Use the SDK's streaming API so long answers feel responsive.
 - **Richer REPL.** Arrow-key history, tab-completion on table names, session transcript save (`:save session.md`).
 
