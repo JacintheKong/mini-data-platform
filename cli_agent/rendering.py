@@ -5,7 +5,7 @@ from cli_agent.agent import AgentResult
 def render(result: AgentResult, verbose: bool = False) -> str:
     lines = [result.text, ""]
 
-    sql_calls = _extract_sql_calls(result)
+    sql_calls = _extract_sql_calls(result) if verbose else []
     if sql_calls:
         lines.append("---")
         for i, (query, output) in enumerate(sql_calls, 1):

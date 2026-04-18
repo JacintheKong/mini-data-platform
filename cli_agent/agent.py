@@ -31,6 +31,7 @@ class AgentSession:
         self.history: list[dict] = []
 
     def answer(self, question: str) -> AgentResult:
+        turn_start = len(self.history)
         messages = self.history + [{"role": "user", "content": question}]
         trace = []
         for _ in range(self.max_iterations):
@@ -58,13 +59,13 @@ class AgentSession:
                 text = _final_text(resp)
                 messages.append({"role": "assistant", "content": _serialize_content(resp.content)})
                 self.history = messages
-                return AgentResult(text=text, trace=trace, messages=messages)
+                return AgentResult(text=text, trace=trace, messages=messages[turn_start:])
             messages.append({"role": "assistant", "content": _serialize_content(resp.content)})
             messages.append({"role": "user", "content": tool_results})
         return AgentResult(
             text=f"(agent did not converge in {self.max_iterations} turns)",
             trace=trace,
-            messages=messages,
+            messages=messages[turn_start:],
         )
 
 
