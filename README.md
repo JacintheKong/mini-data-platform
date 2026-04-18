@@ -108,6 +108,10 @@ uv run pytest tests/cli_agent/ -v
 
 Ten TDD tests on `tools.py` (list/describe/sample/run_sql, read-only enforcement, row cap, timeout) plus three smoke tests on the agent loop (tool round-trip, no-tool-use early exit, max-iterations cap).
 
+## How this was scoped
+
+The [design spec](docs/design/2026-04-17-cli-data-agent-design.md) and [implementation plan](docs/plan/2026-04-17-cli-data-agent.md) I worked from are checked in under [docs/](docs/) for anyone curious about the process before the code.
+
 ## Next steps if I had more time
 
 - **Automated eval harness.** Pair ~20 questions with ground-truth SQL and assert the agent's answer matches within tolerance. Turns "does it work?" into a regression-testable metric.
