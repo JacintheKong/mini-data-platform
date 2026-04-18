@@ -35,7 +35,9 @@ Result:
 
 ## Quick start
 
-**Prerequisite:** [install `uv`](https://docs.astral.sh/uv/getting-started/installation/). The setup script below uses `uv run`, which provisions the project venv on first call.
+**Prerequisites:**
+- [Install `uv`](https://docs.astral.sh/uv/getting-started/installation/) — the setup script uses `uv run`, which provisions the project venv on first call.
+- An [Anthropic API key](https://console.anthropic.com/) — new accounts include free credits sufficient for testing this agent. Astronomer's brief leaves provider choice open; I picked Claude Sonnet 4.5 for its tool-use capability (see [Design decisions](#design-decisions)).
 
 ```bash
 # 1. Build the warehouse (one-time, ~30 seconds)
