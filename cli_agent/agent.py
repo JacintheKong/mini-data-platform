@@ -43,13 +43,6 @@ class AgentSession:
                 messages=copy.deepcopy(messages),
             )
             trace.append(resp)
-            if resp.stop_reason == "end_turn":
-                text = _final_text(resp)
-                # Append assistant turn to history for follow-ups
-                messages.append({"role": "assistant", "content": _serialize_content(resp.content)})
-                self.history = messages
-                return AgentResult(text=text, trace=trace, messages=messages)
-            # Dispatch tool_use blocks
             tool_results = []
             for block in resp.content:
                 if block.type == "tool_use":
@@ -59,6 +52,13 @@ class AgentSession:
                         "tool_use_id": block.id,
                         "content": output,
                     })
+            # No tool calls means the model is done — regardless of stop_reason.
+            # (Sending an empty tool_results back as a user message is rejected by the API.)
+            if not tool_results:
+                text = _final_text(resp)
+                messages.append({"role": "assistant", "content": _serialize_content(resp.content)})
+                self.history = messages
+                return AgentResult(text=text, trace=trace, messages=messages)
             messages.append({"role": "assistant", "content": _serialize_content(resp.content)})
             messages.append({"role": "user", "content": tool_results})
         return AgentResult(

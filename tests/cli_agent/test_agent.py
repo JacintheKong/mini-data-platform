@@ -52,6 +52,30 @@ def test_agent_dispatches_tool_use_and_returns_final_text(duckdb_conn):
     )
 
 
+def test_agent_returns_text_when_no_tool_use(duckdb_conn):
+    """Regression: model may answer in one turn with text-only and a non-end_turn
+    stop_reason. The loop must treat 'no tool_use blocks' as completion, otherwise
+    it appends an empty tool_results array which the API rejects."""
+    client = MagicMock()
+    # Single response: text only, stop_reason that isn't end_turn (e.g., max_tokens
+    # or any model quirk). Loop must still terminate cleanly.
+    only_text = make_response(
+        stop_reason="max_tokens",
+        content=[FakeBlock(type="text", text="The warehouse has three schemas.")],
+    )
+    client.messages.create.side_effect = [only_text]
+
+    session = AgentSession(
+        client=client,
+        system_prompt="test",
+        tools=Tools(duckdb_conn),
+        model="claude-sonnet-4-5",
+    )
+    result = session.answer("what schemas exist?")
+    assert "three schemas" in result.text
+    assert client.messages.create.call_count == 1
+
+
 def test_agent_stops_after_max_iterations(duckdb_conn):
     client = MagicMock()
     # Always return tool_use — never ends
