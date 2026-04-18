@@ -10,6 +10,15 @@
 
 ---
 
+## Post-implementation notes
+
+This plan is the snapshot I worked from. Two things shipped slightly different from what's written below — documenting here instead of rewriting the tasks:
+
+- **Task 15 (README):** plan creates a separate `README-agent.md`; ended up consolidating into the root `README.md` so a new reviewer has a single entry point.
+- **Rendering default:** plan has `render` show prose + SQL + result table by default, with `--verbose` adding the full trace. After live-testing, the default was narrowed to prose-only, and `--verbose` now gates SQL + table + trace together (cleaner for non-technical users; a REPL leak in the SQL extractor was fixed at the same time).
+
+---
+
 ## File Structure
 
 **Created files:**
